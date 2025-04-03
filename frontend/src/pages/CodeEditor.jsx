@@ -54,20 +54,18 @@ function CodeEditor() {
   const prevFolder = useRef(folder);
 
   useEffect(() => {
-    if (
-      folder &&
-      JSON.stringify(folder) !== JSON.stringify(prevFolder.current)
-    ) {
-      if (socket) {
-        // Emit update to server
+    if (folder && socket) {
+      // Use lodash's isEqual for deep comparison instead of JSON.stringify
+      if (!isEqual(prevFolder.current, folder)) {
+        console.log("Emitting folder update to server");
         socket.emit("update-folder", {
           roomId,
           updatedFolder: folder,
         });
+        prevFolder.current = JSON.parse(JSON.stringify(folder)); // Make a deep copy
       }
-      prevFolder.current = folder; // Store last folder state
     }
-  }, [folder, socket]); // Ensure socket is in dependency array
+  }, [folder, roomId, socket]);
 
   useEffect(() => {
     // Join room
@@ -83,10 +81,12 @@ function CodeEditor() {
     const handleFolderUpdated = (updatedFolder) => {
       if (!isEqual(prevFolder.current, updatedFolder)) {
 
+
         
         setFolder(updatedFolder);
     
         if (activeFile) {
+
           const pathParts = activeFile.split("/");
  
           const getFileContent = (obj, parts) => {
@@ -111,6 +111,7 @@ function CodeEditor() {
     
           // ✅ Start from updatedFolder.src.children
           const updatedFile = getFileContent(updatedFolder, pathParts);
+          console.log("Updated file:", updatedFile);
           if (updatedFile) {
             setActiveFileContent(updatedFile.content);
           }
@@ -595,6 +596,7 @@ function CodeEditor() {
 
       return updatedFolder;
     });
+    console.log("Changed folder",folder);
   };
 
   const handleRunCode = async () => {

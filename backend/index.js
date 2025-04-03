@@ -88,9 +88,7 @@ const io = new Server(server, {
   cors: { origin: "*", methods: ["GET", "POST"] },
 });
 
-// Store room data
-// const roomData = new Map();
-// const activeRooms = {}; // Store folder structures per room
+
 
 io.on("connection", (socket) => {
   console.log("New user connected:", socket.id);
@@ -119,8 +117,6 @@ io.on("connection", (socket) => {
   // Handle folder updates
   socket.on("update-folder", async ({ roomId, updatedFolder }) => {
     try {
-      // Update the in-memory folder state
-      // activeRooms[roomId] = updatedFolder;
 
       // Update the database
       await Room.findOneAndUpdate(
@@ -139,6 +135,10 @@ io.on("connection", (socket) => {
   socket.on("cursor-update", ({ roomId, userName, cursorPosition }) => {
     socket.to(roomId).emit("cursor-update", { userName, cursorPosition });
   });
+  socket.on("chat-send", ({ roomId, userName, text }) => {
+    socket.to(roomId).emit("receive-chat", { userName, text });
+  });
+
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
